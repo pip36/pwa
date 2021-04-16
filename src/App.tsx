@@ -1,13 +1,14 @@
-import React from "react";
-import logo from "./logo.svg";
+import balloon from "./balloon.gif";
 import "./App.css";
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-      </header>
+      <div>
+        <img width={300} src={balloon} alt="balloon" />
+        <img width={300} src={balloon} alt="balloon" />
+        <img width={300} src={balloon} alt="balloon" />
+      </div>
     </div>
   );
 }
