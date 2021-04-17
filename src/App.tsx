@@ -1,52 +1,76 @@
-import { useState } from "react";
 import "./App.css";
-import { Balloon, BalloonProps } from "./Balloon";
-import { useAnimationFrame } from "./useAnimationFrame";
+import * as Tone from "tone";
+import { useEffect, useState } from "react";
+
+const notes: string[] = [
+  "C",
+  "C#",
+  "D",
+  "D#",
+  "E",
+  "F",
+  "F#",
+  "G",
+  "G#",
+  "A",
+  "A#",
+  "B",
+];
+
+//create a synth and connect it to the main output (your speakers)
+const synth = new Tone.Synth().toDestination();
+const seq = new Tone.Sequence((time, note) => {
+  synth.triggerAttackRelease(note, 0.1, time);
+  // subdivisions are given as subarrays
+}, []).start(0);
 
 function App() {
-  const [balloons, setBalloons] = useState<BalloonProps[]>([
-    {
-      y: -1000,
-      color: "sepia(100%) saturate(300%) brightness(70%) hue-rotate(0deg)",
-    },
-    {
-      y: -800,
-      color: "sepia(100%) saturate(300%) brightness(70%) hue-rotate(90deg)",
-    },
-    {
-      y: -1200,
-      color: "sepia(100%) saturate(300%) brightness(70%) hue-rotate(180deg)",
-    },
-    {
-      y: -500,
-      color: "sepia(100%) saturate(300%) brightness(70%) hue-rotate(270deg)",
-    },
-    {
-      y: -200,
-      color: "sepia(100%) saturate(300%) brightness(70%) hue-rotate(320deg)",
-    },
-  ]);
+  const [selectedNotes, setSelectedNotes] = useState<string[]>(["C"]);
+  const [tempo, setTempo] = useState<number>(120);
 
-  useAnimationFrame((deltaTime: number) => {
-    setBalloons((prevBalloons) =>
-      prevBalloons.map((b) => ({ ...b, y: getWrapPosition(b.y, deltaTime) }))
-    );
-  });
+  useEffect(() => {
+    seq.events = [...selectedNotes.map((n) => n + "4"), selectedNotes[0] + "5"];
+  }, [selectedNotes]);
+
+  useEffect(() => {
+    Tone.getTransport().bpm.set({ value: tempo });
+  }, [tempo]);
 
   return (
     <div className="App">
-      <div style={{ opacity: 0 }}>.</div>
-
-      {balloons.map(({ y, color }, i) => (
-        <Balloon key={i} y={y} color={color} />
+      <label htmlFor="tempo">Tempo</label>
+      <input
+        id="tempo"
+        type="number"
+        value={tempo}
+        onChange={(e) => {
+          setTempo(Number(e.target.value));
+        }}
+      />
+      <button
+        onClick={async () => {
+          await Tone.start();
+          Tone.Transport.start();
+        }}
+      >
+        init
+      </button>
+      {notes.map((note) => (
+        <button
+          onClick={() => {
+            const isSelected = selectedNotes.includes(note);
+            if (isSelected) {
+              setSelectedNotes((x) => x.filter((n) => n !== note));
+            } else {
+              setSelectedNotes((x) => [...x, note]);
+            }
+          }}
+        >
+          {note} {selectedNotes.includes(note) && "✔"}
+        </button>
       ))}
     </div>
   );
 }
-
-const getWrapPosition = (yPos: number, deltaTime: number) => {
-  const newPos = yPos + deltaTime * 0.3;
-  return newPos > 1000 ? -300 : newPos;
-};
 
 export default App;
