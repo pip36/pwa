@@ -24,13 +24,32 @@ const seq = new Tone.Sequence((time, note) => {
   // subdivisions are given as subarrays
 }, []).start(0);
 
+const buildSequence = (
+  notes: string[],
+  transpose: number,
+  octaveRange: number
+) => {
+  const result = new Array(octaveRange)
+    .fill(0)
+    .map((n, i) => n + i)
+    .flatMap((octave) => [
+      ...notes.map((n) => n + (transpose + octave).toString()),
+    ]);
+
+  console.log(result);
+
+  return result;
+};
+
 function App() {
   const [selectedNotes, setSelectedNotes] = useState<string[]>(["C"]);
   const [tempo, setTempo] = useState<number>(120);
+  const [transpose, setTranspose] = useState<number>(4);
+  const [octave, setOctave] = useState<number>(1);
 
   useEffect(() => {
-    seq.events = [...selectedNotes.map((n) => n + "4"), selectedNotes[0] + "5"];
-  }, [selectedNotes]);
+    seq.events = buildSequence(selectedNotes, transpose, octave);
+  }, [selectedNotes, transpose, octave]);
 
   useEffect(() => {
     Tone.getTransport().bpm.set({ value: tempo });
@@ -38,15 +57,42 @@ function App() {
 
   return (
     <div className="App">
-      <label htmlFor="tempo">Tempo</label>
-      <input
-        id="tempo"
-        type="number"
-        value={tempo}
-        onChange={(e) => {
-          setTempo(Number(e.target.value));
-        }}
-      />
+      <div>
+        <div>
+          <label htmlFor="tempo">Tempo</label>
+          <input
+            id="tempo"
+            type="number"
+            value={tempo}
+            onChange={(e) => {
+              setTempo(Number(e.target.value));
+            }}
+          />
+        </div>
+        <div>
+          <label htmlFor="transpose">Transpose</label>
+          <input
+            id="transpose"
+            type="number"
+            value={transpose}
+            onChange={(e) => {
+              setTranspose(Number(e.target.value));
+            }}
+          />
+        </div>
+        <div>
+          <label htmlFor="octave">Octave</label>
+          <input
+            id="octave"
+            type="number"
+            value={octave}
+            onChange={(e) => {
+              setOctave(Number(e.target.value));
+            }}
+          />
+        </div>
+      </div>
+
       <button
         onClick={async () => {
           await Tone.start();
