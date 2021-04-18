@@ -28,18 +28,13 @@ const buildSequence = (
   notes: string[],
   transpose: number,
   octaveRange: number
-) => {
-  const result = new Array(octaveRange)
+) =>
+  new Array(octaveRange)
     .fill(0)
     .map((n, i) => n + i)
     .flatMap((octave) => [
       ...notes.map((n) => n + (transpose + octave).toString()),
     ]);
-
-  console.log(result);
-
-  return result;
-};
 
 function App() {
   const [selectedNotes, setSelectedNotes] = useState<string[]>(["C"]);
@@ -62,8 +57,10 @@ function App() {
           <label htmlFor="tempo">Tempo</label>
           <input
             id="tempo"
-            type="number"
+            type="range"
             value={tempo}
+            min={40}
+            max={360}
             onChange={(e) => {
               setTempo(Number(e.target.value));
             }}
@@ -73,8 +70,10 @@ function App() {
           <label htmlFor="transpose">Transpose</label>
           <input
             id="transpose"
-            type="number"
+            type="range"
             value={transpose}
+            min={1}
+            max={6}
             onChange={(e) => {
               setTranspose(Number(e.target.value));
             }}
@@ -84,8 +83,10 @@ function App() {
           <label htmlFor="octave">Octave</label>
           <input
             id="octave"
-            type="number"
+            type="range"
             value={octave}
+            min={1}
+            max={4}
             onChange={(e) => {
               setOctave(Number(e.target.value));
             }}
