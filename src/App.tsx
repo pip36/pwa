@@ -1,21 +1,7 @@
 import "./App.css";
 import * as Tone from "tone";
-import { useEffect, useState } from "react";
-
-const notes: string[] = [
-  "C",
-  "C#",
-  "D",
-  "D#",
-  "E",
-  "F",
-  "F#",
-  "G",
-  "G#",
-  "A",
-  "A#",
-  "B",
-];
+import React, { useEffect, useState } from "react";
+import Keyboard, { Note } from "./components/Keyboard";
 
 //create a synth and connect it to the main output (your speakers)
 const synth = new Tone.Synth().toDestination();
@@ -24,11 +10,7 @@ const seq = new Tone.Sequence((time, note) => {
   // subdivisions are given as subarrays
 }, []).start(0);
 
-const buildSequence = (
-  notes: string[],
-  transpose: number,
-  octaveRange: number
-) =>
+const buildSequence = (notes: Note[], transpose: number, octaveRange: number) =>
   new Array(octaveRange)
     .fill(0)
     .map((n, i) => n + i)
@@ -37,7 +19,7 @@ const buildSequence = (
     ]);
 
 function App() {
-  const [selectedNotes, setSelectedNotes] = useState<string[]>(["C"]);
+  const [selectedNotes, setSelectedNotes] = useState<Note[]>(["C"]);
   const [tempo, setTempo] = useState<number>(120);
   const [transpose, setTranspose] = useState<number>(4);
   const [octave, setOctave] = useState<number>(1);
@@ -53,6 +35,17 @@ function App() {
   return (
     <div className="App">
       <div>
+        <Keyboard
+          selectedNotes={selectedNotes}
+          onKeySelect={(note) => {
+            const isSelected = selectedNotes.includes(note);
+            if (isSelected) {
+              setSelectedNotes((x) => x.filter((n) => n !== note));
+            } else {
+              setSelectedNotes((x) => [...x, note]);
+            }
+          }}
+        />
         <div>
           <label htmlFor="tempo">Tempo</label>
           <input
@@ -102,20 +95,6 @@ function App() {
       >
         init
       </button>
-      {notes.map((note) => (
-        <button
-          onClick={() => {
-            const isSelected = selectedNotes.includes(note);
-            if (isSelected) {
-              setSelectedNotes((x) => x.filter((n) => n !== note));
-            } else {
-              setSelectedNotes((x) => [...x, note]);
-            }
-          }}
-        >
-          {note} {selectedNotes.includes(note) && "✔"}
-        </button>
-      ))}
     </div>
   );
 }
