@@ -1,32 +1,37 @@
 import "./App.css";
 import * as Tone from "tone";
 import React, { useEffect, useState } from "react";
-import Keyboard, { Note } from "./components/Keyboard";
+import Keyboard from "./components/Keyboard";
+import {
+  buildSequence,
+  Degree,
+  degrees,
+  getChord,
+  Note,
+  Octave,
+} from "./ChordBuilder/chordBuilder";
 
-//create a synth and connect it to the main output (your speakers)
 const synth = new Tone.Synth().toDestination();
 const seq = new Tone.Sequence((time, note) => {
   synth.triggerAttackRelease(note, 0.1, time);
-  // subdivisions are given as subarrays
 }, []).start(0);
 
-const buildSequence = (notes: Note[], transpose: number, octaveRange: number) =>
-  new Array(octaveRange)
-    .fill(0)
-    .map((n, i) => n + i)
-    .flatMap((octave) => [
-      ...notes.map((n) => n + (transpose + octave).toString()),
-    ]);
-
 function App() {
-  const [selectedNotes, setSelectedNotes] = useState<Note[]>(["C"]);
-  const [tempo, setTempo] = useState<number>(120);
-  const [transpose, setTranspose] = useState<number>(4);
-  const [octave, setOctave] = useState<number>(1);
+  const mode = "major";
+
+  const [key, setKey] = useState<Note>("C");
+  const [degree, setDegree] = useState<Degree>(1);
+  const [tempo, setTempo] = useState<number>(180);
+  const [sequenceLength, setSequenceLength] = useState<number>(9);
+  const [octave, setOctave] = useState<Octave>(2);
 
   useEffect(() => {
-    seq.events = buildSequence(selectedNotes, transpose, octave);
-  }, [selectedNotes, transpose, octave]);
+    seq.events = buildSequence(getChord(key, mode, degree), {
+      length: sequenceLength,
+      startOctave: octave,
+      degree,
+    });
+  }, [key, degree, sequenceLength, octave]);
 
   useEffect(() => {
     Tone.getTransport().bpm.set({ value: tempo });
@@ -35,18 +40,26 @@ function App() {
   return (
     <div className="App">
       <div>
-        <Keyboard
-          selectedNotes={selectedNotes}
-          onKeySelect={(note) => {
-            const isSelected = selectedNotes.includes(note);
-            if (isSelected) {
-              setSelectedNotes((x) => x.filter((n) => n !== note));
-            } else {
-              setSelectedNotes((x) => [...x, note]);
-            }
-          }}
-        />
         <div>
+          <div>
+            {degrees.map((x) => {
+              return (
+                <>
+                  <input
+                    type="radio"
+                    id={x.toString()}
+                    name="degree"
+                    value={x}
+                    onChange={() => setDegree(x)}
+                    checked={x === degree}
+                  />
+
+                  <label htmlFor={x.toString()}>{x}</label>
+                </>
+              );
+            })}
+          </div>
+
           <label htmlFor="tempo">Tempo</label>
           <input
             id="tempo"
@@ -60,15 +73,15 @@ function App() {
           />
         </div>
         <div>
-          <label htmlFor="transpose">Transpose</label>
+          <label htmlFor="sequenceLength">Length</label>
           <input
-            id="transpose"
+            id="sequenceLength"
             type="range"
-            value={transpose}
+            value={sequenceLength}
             min={1}
-            max={6}
+            max={12}
             onChange={(e) => {
-              setTranspose(Number(e.target.value));
+              setSequenceLength(Number(e.target.value));
             }}
           />
         </div>
@@ -81,7 +94,7 @@ function App() {
             min={1}
             max={4}
             onChange={(e) => {
-              setOctave(Number(e.target.value));
+              setOctave(Number(e.target.value) as Octave);
             }}
           />
         </div>

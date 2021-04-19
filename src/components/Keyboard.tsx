@@ -1,18 +1,5 @@
 import { createUseStyles } from "react-jss";
-
-export type Note =
-  | "C"
-  | "C#"
-  | "D"
-  | "D#"
-  | "E"
-  | "F"
-  | "F#"
-  | "G"
-  | "G#"
-  | "A"
-  | "A#"
-  | "B";
+import { Note } from "../ChordBuilder/chordBuilder";
 
 const whiteKeyWidth = 25;
 const blackKeyWidth = 10;
