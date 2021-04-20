@@ -6,8 +6,8 @@ import {
   buildSequence,
   Degree,
   degrees,
-  getChord,
   Note,
+  notes,
   Octave,
 } from "./ChordBuilder/chordBuilder";
 
@@ -26,10 +26,11 @@ function App() {
   const [octave, setOctave] = useState<Octave>(2);
 
   useEffect(() => {
-    seq.events = buildSequence(getChord(key, mode, degree), {
+    seq.events = buildSequence({
       length: sequenceLength,
       startOctave: octave,
       degree,
+      tonic: key,
     });
   }, [key, degree, sequenceLength, octave]);
 
@@ -42,6 +43,9 @@ function App() {
       <div>
         <div>
           <div>
+            {notes.map((note) => {
+              return <button onClick={() => setKey(note)}>{note}</button>;
+            })}
             {degrees.map((x) => {
               return (
                 <>
