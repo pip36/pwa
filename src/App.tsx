@@ -1,11 +1,12 @@
 import "./App.css";
 import * as Tone from "tone";
 import React, { useEffect, useState } from "react";
-import Keyboard from "./components/Keyboard";
 import {
   buildSequence,
   Degree,
   degrees,
+  Mode,
+  modes,
   Note,
   notes,
   Octave,
@@ -17,9 +18,8 @@ const seq = new Tone.Sequence((time, note) => {
 }, []).start(0);
 
 function App() {
-  const mode = "major";
-
   const [key, setKey] = useState<Note>("C");
+  const [mode, setMode] = useState<Mode>("ionian");
   const [degree, setDegree] = useState<Degree>(1);
   const [tempo, setTempo] = useState<number>(180);
   const [sequenceLength, setSequenceLength] = useState<number>(9);
@@ -31,8 +31,9 @@ function App() {
       startOctave: octave,
       degree,
       tonic: key,
+      mode,
     });
-  }, [key, degree, sequenceLength, octave]);
+  }, [mode, key, degree, sequenceLength, octave]);
 
   useEffect(() => {
     Tone.getTransport().bpm.set({ value: tempo });
@@ -43,9 +44,17 @@ function App() {
       <div>
         <div>
           <div>
-            {notes.map((note) => {
-              return <button onClick={() => setKey(note)}>{note}</button>;
-            })}
+            <div>
+              {notes.map((note) => (
+                <button onClick={() => setKey(note)}>{note}</button>
+              ))}
+            </div>
+            <div>
+              {modes.map((mode) => (
+                <button onClick={() => setMode(mode)}>{mode}</button>
+              ))}
+            </div>
+
             {degrees.map((x) => {
               return (
                 <>

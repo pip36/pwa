@@ -1,4 +1,13 @@
-export type Scale = "major";
+export const modes = [
+  "ionian",
+  "dorian",
+  "phrygian",
+  "lydian",
+  "mixolydian",
+  "aeolian",
+  "locarian",
+] as const;
+export type Mode = typeof modes[number];
 
 export const degrees = [1, 2, 3, 4, 5, 6, 7] as const;
 export type Degree = typeof degrees[number];
@@ -62,20 +71,50 @@ const CHROMATIC_FLATS = [
 
 const flatMajors = ["Db", "Eb", "F", "Ab", "Bb"];
 
-const swapEnharmonic: Partial<{ [Property in Note]: Note }> = {
+type NoteMap = Partial<{ [Property in Note]: Note }>;
+const swapEnharmonic = (mode: Mode): NoteMap => {
+  switch (mode) {
+    case "ionian":
+      return ionianSwapEnharmonic;
+    case "dorian":
+      return dorianSwapEnharmonic;
+    default:
+      return ionianSwapEnharmonic;
+  }
+};
+
+const ionianSwapEnharmonic: NoteMap = {
   "C#": "Db",
   Gb: "F#",
   "G#": "Ab",
+  "D#": "Eb",
+};
+const dorianSwapEnharmonic: NoteMap = {
+  Db: "C#",
+  Gb: "F#",
+  Ab: "G#",
+  "D#": "Eb",
+  "A#": "Bb",
 };
 
-export const buildScale = (scale: Scale, tonic: Note) => {
-  const swapTonic = swapEnharmonic[tonic];
+const modePatterns: { [Property in Mode]: string } = {
+  ionian: "TTSTTTS",
+  dorian: "TSTTTST",
+  phrygian: "STTTSTT",
+  lydian: "TTTSTTS",
+  mixolydian: "TTSTTST",
+  aeolian: "TSTTSTT",
+  locarian: "STTSTTT",
+};
+
+export const buildScale = (mode: Mode, tonic: Note) => {
+  const swapTonic = swapEnharmonic(mode)[tonic];
   if (swapTonic !== undefined) {
     tonic = swapTonic;
   }
-  const majorPattern = "TTSTTTS";
+  const pattern = modePatterns[mode];
   const NOTES = flatMajors.includes(tonic) ? CHROMATIC_FLATS : CHROMATIC_SHARPS;
-  const intervals = majorPattern.split("").map((x) => (x === "T" ? 2 : 1));
+  const intervals = pattern.split("").map((x) => (x === "T" ? 2 : 1));
   let currIndex = NOTES.findIndex((x: Note) => x === tonic);
   const result: Note[] = [];
 
@@ -93,6 +132,7 @@ type BuildSequenceOptions = {
   startOctave?: Octave;
   tonic?: Note;
   degree?: Degree;
+  mode: Mode;
 };
 
 export const buildSequence = ({
@@ -100,10 +140,11 @@ export const buildSequence = ({
   startOctave = 3,
   tonic = "C",
   degree = 1,
+  mode,
 }: BuildSequenceOptions) => {
   const result: string[] = [];
 
-  const scale = buildScale("major", tonic);
+  const scale = buildScale(mode, tonic);
 
   let i = 0;
   let noteIndex = degree - 1;
@@ -111,7 +152,7 @@ export const buildSequence = ({
   while (result.length < length) {
     const note = scale[i % scale.length];
 
-    if (i > 0 && note[0] === "C") {
+    if ((i > 0 || mode !== "ionian") && note[0] === "C") {
       octaveModifier++;
     }
 
