@@ -1,168 +1,77 @@
-import { buildSequence, buildScale } from "./chordBuilder";
+import { buildSequence, buildTriad, toNote, toPitch } from "./chordBuilder";
 
-describe("ChordBuilder", () => {
-  describe("buildScale()", () => {
-    describe("ionian", () => {
-      it.each`
-        tonic   | expected
-        ${"C"}  | ${["C", "D", "E", "F", "G", "A", "B"]}
-        ${"C#"} | ${["Db", "Eb", "F", "Gb", "Ab", "Bb", "C"]}
-        ${"Db"} | ${["Db", "Eb", "F", "Gb", "Ab", "Bb", "C"]}
-        ${"D"}  | ${["D", "E", "F#", "G", "A", "B", "C#"]}
-        ${"Eb"} | ${["Eb", "F", "G", "Ab", "Bb", "C", "D"]}
-        ${"E"}  | ${["E", "F#", "G#", "A", "B", "C#", "D#"]}
-        ${"F"}  | ${["F", "G", "A", "Bb", "C", "D", "E"]}
-        ${"F#"} | ${["F#", "G#", "A#", "B", "C#", "D#", "F"]}
-        ${"G"}  | ${["G", "A", "B", "C", "D", "E", "F#"]}
-        ${"Ab"} | ${["Ab", "Bb", "C", "Db", "Eb", "F", "G"]}
-        ${"A"}  | ${["A", "B", "C#", "D", "E", "F#", "G#"]}
-        ${"Bb"} | ${["Bb", "C", "D", "Eb", "F", "G", "A"]}
-        ${"B"}  | ${["B", "C#", "D#", "E", "F#", "G#", "A#"]}
-      `("Tonic - $tonic", ({ tonic, expected }) => {
-        const actual = buildScale("ionian", tonic);
-
-        expect(actual).toEqual(expected);
-      });
-    });
+// Given a pitch return a Note (all flats) e.g. 0 = C1 , 1 = Db1, 12 = C2
+describe("toNote()", () => {
+  test.each`
+    input | expected
+    ${0}  | ${"C1"}
+    ${1}  | ${"Db1"}
+    ${10} | ${"Bb1"}
+    ${11} | ${"B1"}
+    ${12} | ${"C2"}
+    ${23} | ${"B2"}
+    ${24} | ${"C3"}
+    ${35} | ${"B3"}
+    ${36} | ${"C4"}
+  `("Converts $input to note $expected", ({ input, expected }) => {
+    expect(toNote(input)).toEqual(expected);
   });
+});
 
-  describe("buildSequence()", () => {
-    test.each`
-      length       | expected
-      ${undefined} | ${["C3", "E3", "G3"]}
-      ${1}         | ${["C3"]}
-      ${2}         | ${["C3", "E3"]}
-      ${3}         | ${["C3", "E3", "G3"]}
-      ${6}         | ${["C3", "E3", "G3", "C4", "E4", "G4"]}
-      ${10}        | ${["C3", "E3", "G3", "C4", "E4", "G4", "C5", "E5", "G5", "C6"]}
-    `("Chord of length $length returns $expected", ({ length, expected }) => {
-      const actual = buildSequence({ tonic: "C", length, mode: "ionian" });
-      expect(actual).toEqual(expected);
-    });
-
-    describe("Ionian Triads", () => {
-      test.each`
-        tonic   | degree | expected
-        ${"C"}  | ${1}   | ${["C3", "E3", "G3"]}
-        ${"C"}  | ${2}   | ${["D3", "F3", "A3"]}
-        ${"C"}  | ${3}   | ${["E3", "G3", "B3"]}
-        ${"C"}  | ${4}   | ${["F3", "A3", "C4"]}
-        ${"C"}  | ${5}   | ${["G3", "B3", "D4"]}
-        ${"C"}  | ${6}   | ${["A3", "C4", "E4"]}
-        ${"C"}  | ${7}   | ${["B3", "D4", "F4"]}
-        ${"C#"} | ${1}   | ${["Db3", "F3", "Ab3"]}
-        ${"C#"} | ${2}   | ${["Eb3", "Gb3", "Bb3"]}
-        ${"C#"} | ${3}   | ${["F3", "Ab3", "C4"]}
-        ${"C#"} | ${4}   | ${["Gb3", "Bb3", "Db4"]}
-        ${"C#"} | ${5}   | ${["Ab3", "C4", "Eb4"]}
-        ${"C#"} | ${6}   | ${["Bb3", "Db4", "F4"]}
-        ${"C#"} | ${7}   | ${["C4", "Eb4", "Gb4"]}
-        ${"D"}  | ${1}   | ${["D3", "F#3", "A3"]}
-        ${"D"}  | ${2}   | ${["E3", "G3", "B3"]}
-        ${"D"}  | ${3}   | ${["F#3", "A3", "C#4"]}
-        ${"D"}  | ${4}   | ${["G3", "B3", "D4"]}
-        ${"D"}  | ${5}   | ${["A3", "C#4", "E4"]}
-        ${"D"}  | ${6}   | ${["B3", "D4", "F#4"]}
-        ${"D"}  | ${7}   | ${["C#4", "E4", "G4"]}
-        ${"E"}  | ${1}   | ${["E3", "G#3", "B3"]}
-        ${"E"}  | ${2}   | ${["F#3", "A3", "C#4"]}
-        ${"E"}  | ${3}   | ${["G#3", "B3", "D#4"]}
-        ${"E"}  | ${4}   | ${["A3", "C#4", "E4"]}
-        ${"E"}  | ${5}   | ${["B3", "D#4", "F#4"]}
-        ${"E"}  | ${6}   | ${["C#4", "E4", "G#4"]}
-        ${"E"}  | ${7}   | ${["D#4", "F#4", "A4"]}
-        ${"F"}  | ${1}   | ${["F3", "A3", "C4"]}
-        ${"F"}  | ${2}   | ${["G3", "Bb3", "D4"]}
-        ${"F"}  | ${3}   | ${["A3", "C4", "E4"]}
-        ${"F"}  | ${4}   | ${["Bb3", "D4", "F4"]}
-        ${"F"}  | ${5}   | ${["C4", "E4", "G4"]}
-        ${"F"}  | ${6}   | ${["D4", "F4", "A4"]}
-        ${"F"}  | ${7}   | ${["E4", "G4", "Bb4"]}
-        ${"Gb"} | ${1}   | ${["F#3", "A#3", "C#4"]}
-        ${"Gb"} | ${2}   | ${["G#3", "B3", "D#4"]}
-        ${"Gb"} | ${3}   | ${["A#3", "C#4", "F4"]}
-        ${"Gb"} | ${4}   | ${["B3", "D#4", "F#4"]}
-        ${"Gb"} | ${5}   | ${["C#4", "F4", "G#4"]}
-        ${"Gb"} | ${6}   | ${["D#4", "F#4", "A#4"]}
-        ${"Gb"} | ${7}   | ${["F4", "G#4", "B4"]}
-        ${"G"}  | ${1}   | ${["G3", "B3", "D4"]}
-        ${"G"}  | ${2}   | ${["A3", "C4", "E4"]}
-        ${"G"}  | ${3}   | ${["B3", "D4", "F#4"]}
-        ${"G"}  | ${4}   | ${["C4", "E4", "G4"]}
-        ${"G"}  | ${5}   | ${["D4", "F#4", "A4"]}
-        ${"G"}  | ${6}   | ${["E4", "G4", "B4"]}
-        ${"G"}  | ${7}   | ${["F#4", "A4", "C5"]}
-        ${"G#"} | ${1}   | ${["Ab3", "C4", "Eb4"]}
-        ${"G#"} | ${2}   | ${["Bb3", "Db4", "F4"]}
-        ${"G#"} | ${3}   | ${["C4", "Eb4", "G4"]}
-        ${"G#"} | ${4}   | ${["Db4", "F4", "Ab4"]}
-        ${"G#"} | ${5}   | ${["Eb4", "G4", "Bb4"]}
-        ${"G#"} | ${6}   | ${["F4", "Ab4", "C5"]}
-        ${"G#"} | ${7}   | ${["G4", "Bb4", "Db5"]}
-        ${"A"}  | ${1}   | ${["A3", "C#4", "E4"]}
-        ${"A"}  | ${2}   | ${["B3", "D4", "F#4"]}
-        ${"A"}  | ${3}   | ${["C#4", "E4", "G#4"]}
-        ${"A"}  | ${4}   | ${["D4", "F#4", "A4"]}
-        ${"A"}  | ${5}   | ${["E4", "G#4", "B4"]}
-        ${"A"}  | ${6}   | ${["F#4", "A4", "C#5"]}
-        ${"A"}  | ${7}   | ${["G#4", "B4", "D5"]}
-        ${"B"}  | ${1}   | ${["B3", "D#4", "F#4"]}
-        ${"B"}  | ${2}   | ${["C#4", "E4", "G#4"]}
-        ${"B"}  | ${3}   | ${["D#4", "F#4", "A#4"]}
-        ${"B"}  | ${4}   | ${["E4", "G#4", "B4"]}
-        ${"B"}  | ${5}   | ${["F#4", "A#4", "C#5"]}
-        ${"B"}  | ${6}   | ${["G#4", "B4", "D#5"]}
-        ${"B"}  | ${7}   | ${["A#4", "C#5", "E5"]}
-      `(
-        "Tonic: $tonic, degree: $degree -> $expected",
-        ({ tonic, degree, expected }) => {
-          const actual = buildSequence({ tonic, degree, mode: "ionian" });
-          expect(actual).toEqual(expected);
-        }
-      );
-    });
-
-    describe("Dorian Triads", () => {
-      test.each`
-        tonic   | degree | expected
-        ${"D"}  | ${1}   | ${["D3", "F3", "A3", "D4", "F4", "A4"]}
-        ${"D"}  | ${7}   | ${["C4", "E4", "G4", "C5", "E5", "G5"]}
-        ${"D#"} | ${1}   | ${["Eb3", "Gb3", "Bb3", "Eb4", "Gb4", "Bb4"]}
-        ${"Eb"} | ${1}   | ${["Eb3", "Gb3", "Bb3", "Eb4", "Gb4", "Bb4"]}
-        ${"E"}  | ${1}   | ${["E3", "G3", "B3", "E4", "G4", "B4"]}
-        ${"F"}  | ${1}   | ${["F3", "Ab3", "C4", "F4", "Ab4", "C5"]}
-        ${"Gb"} | ${1}   | ${["F#3", "A3", "C#4", "F#4", "A4", "C#5"]}
-        ${"F#"} | ${1}   | ${["F#3", "A3", "C#4", "F#4", "A4", "C#5"]}
-        ${"G"}  | ${1}   | ${["G3", "A#3", "D4", "G4", "A#4", "D5"]}
-        ${"Ab"} | ${1}   | ${["G#3", "B3", "D#4", "G#4", "B4", "D#5"]}
-        ${"G#"} | ${1}   | ${["G#3", "B3", "D#4", "G#4", "B4", "D#5"]}
-        ${"A"}  | ${1}   | ${["A3", "C4", "E4", "A4", "C5", "E5"]}
-        ${"A#"} | ${1}   | ${["Bb3", "Db4", "F4", "Bb4", "Db5", "F5"]}
-        ${"Bb"} | ${1}   | ${["Bb3", "Db4", "F4", "Bb4", "Db5", "F5"]}
-        ${"B"}  | ${1}   | ${["B3", "D4", "F#4", "B4", "D5", "F#5"]}
-        ${"C"}  | ${1}   | ${["C4", "D#4", "G4", "C5", "D#5", "G5"]}
-        ${"C#"} | ${1}   | ${["C#4", "E4", "G#4", "C#5", "E5", "G#5"]}
-        ${"Db"} | ${1}   | ${["C#4", "E4", "G#4", "C#5", "E5", "G#5"]}
-      `("Tonic: $tonic, degree: $degree", ({ tonic, degree, expected }) => {
-        const actual = buildSequence({
-          tonic,
-          degree,
-          mode: "dorian",
-          length: 6,
-        });
-        expect(actual).toEqual(expected);
-      });
-    });
-
-    test("Can change start octave", () => {
-      const actual = buildSequence({
-        tonic: "C",
-        degree: 1,
-        length: 6,
-        startOctave: 2,
-        mode: "ionian",
-      });
-      expect(actual).toEqual(["C2", "E2", "G2", "C3", "E3", "G3"]);
-    });
+describe("toPitch()", () => {
+  test.each`
+    input    | expected
+    ${"C1"}  | ${0}
+    ${"Db1"} | ${1}
+    ${"Bb1"} | ${10}
+    ${"B1"}  | ${11}
+    ${"C2"}  | ${12}
+    ${"B2"}  | ${23}
+    ${"C3"}  | ${24}
+    ${"B3"}  | ${35}
+    ${"C4"}  | ${36}
+  `("Converts $input to pitch $expected", ({ input, expected }) => {
+    expect(toPitch(input)).toEqual(expected);
   });
+});
+
+// Given tonic, octave, mode and degree return pitches representing chord
+describe("buildTriad()", () => {
+  test.each`
+    tonic  | mode        | degree | octave | expected
+    ${"C"} | ${"ionian"} | ${1}   | ${1}   | ${[toPitch("C1"), toPitch("E1"), toPitch("G1")]}
+    ${"C"} | ${"ionian"} | ${2}   | ${1}   | ${[toPitch("D1"), toPitch("F1"), toPitch("A1")]}
+    ${"C"} | ${"ionian"} | ${7}   | ${1}   | ${[toPitch("B1"), toPitch("D2"), toPitch("F2")]}
+    ${"D"} | ${"ionian"} | ${1}   | ${1}   | ${[toPitch("D1"), toPitch("Gb1"), toPitch("A1")]}
+    ${"D"} | ${"ionian"} | ${7}   | ${1}   | ${[toPitch("Db2"), toPitch("E2"), toPitch("G2")]}
+    ${"B"} | ${"ionian"} | ${1}   | ${1}   | ${[toPitch("B1"), toPitch("Eb2"), toPitch("Gb2")]}
+    ${"B"} | ${"ionian"} | ${1}   | ${2}   | ${[toPitch("B2"), toPitch("Eb3"), toPitch("Gb3")]}
+    ${"D"} | ${"dorian"} | ${1}   | ${1}   | ${[toPitch("D1"), toPitch("F1"), toPitch("A1")]}
+    ${"D"} | ${"dorian"} | ${7}   | ${3}   | ${[toPitch("C4"), toPitch("E4"), toPitch("G4")]}
+  `(
+    "Tonic: $tonic, mode: $mode, degree: $degree, octave: $octave",
+    ({ tonic, mode, degree, octave, expected }) => {
+      expect(buildTriad({ tonic, mode, degree, octave })).toEqual(expected);
+    }
+  );
+});
+
+describe("buildSequence()", () => {
+  test.each`
+    tonic  | mode            | degree | startOctave | length | expected
+    ${"C"} | ${"ionian"}     | ${1}   | ${1}        | ${6}   | ${["C1", "E1", "G1", "C2", "E2", "G2"]}
+    ${"D"} | ${"dorian"}     | ${1}   | ${1}        | ${6}   | ${["D1", "F1", "A1", "D2", "F2", "A2"]}
+    ${"E"} | ${"phrygian"}   | ${1}   | ${1}        | ${6}   | ${["E1", "G1", "B1", "E2", "G2", "B2"]}
+    ${"F"} | ${"lydian"}     | ${1}   | ${1}        | ${6}   | ${["F1", "A1", "C2", "F2", "A2", "C3"]}
+    ${"G"} | ${"mixolydian"} | ${1}   | ${1}        | ${6}   | ${["G1", "B1", "D2", "G2", "B2", "D3"]}
+    ${"A"} | ${"aeolian"}    | ${1}   | ${1}        | ${6}   | ${["A1", "C2", "E2", "A2", "C3", "E3"]}
+    ${"B"} | ${"locrian"}    | ${1}   | ${1}        | ${6}   | ${["B1", "D2", "F2", "B2", "D3", "F3"]}
+  `(
+    "Tonic: $tonic, mode: $mode, degree: $degree, octave: $startOctave",
+    ({ tonic, mode, degree, startOctave, length, expected }) => {
+      expect(
+        buildSequence({ tonic, mode, degree, startOctave, length })
+      ).toEqual(expected);
+    }
+  );
 });
