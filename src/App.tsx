@@ -1,10 +1,9 @@
 import "./App.css";
 import * as Tone from "tone";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   buildSequence,
   Degree,
-  degrees,
   Mode,
   modes,
   Note,
@@ -20,20 +19,22 @@ const seq = new Tone.Sequence((time, note) => {
 function App() {
   const [key, setKey] = useState<Note>("C");
   const [mode, setMode] = useState<Mode>("ionian");
-  const [degree, setDegree] = useState<Degree>(1);
+  const [degrees, setDegrees] = useState<Degree[]>([1, 2, 3, 4, 5, 6, 7, 1]);
   const [tempo, setTempo] = useState<number>(180);
   const [sequenceLength, setSequenceLength] = useState<number>(9);
   const [octave, setOctave] = useState<Octave>(2);
 
   useEffect(() => {
-    seq.events = buildSequence({
-      length: sequenceLength,
-      startOctave: octave,
-      degree,
-      tonic: key,
-      mode,
-    });
-  }, [mode, key, degree, sequenceLength, octave]);
+    seq.events = degrees.flatMap((degree) =>
+      buildSequence({
+        length: sequenceLength,
+        startOctave: octave,
+        degree,
+        tonic: key,
+        mode,
+      })
+    );
+  }, [mode, key, degrees, sequenceLength, octave]);
 
   useEffect(() => {
     Tone.getTransport().bpm.set({ value: tempo });
@@ -55,19 +56,26 @@ function App() {
               ))}
             </div>
 
-            {degrees.map((x) => {
+            {degrees.map((x, i) => {
               return (
                 <>
-                  <input
-                    type="radio"
-                    id={x.toString()}
+                  <select
+                    key="x"
                     name="degree"
+                    id="degree"
                     value={x}
-                    onChange={() => setDegree(x)}
-                    checked={x === degree}
-                  />
-
-                  <label htmlFor={x.toString()}>{x}</label>
+                    onChange={(e) => {
+                      const selected = e.target.value;
+                      console.log("SELECTED", selected);
+                      let newDegrees = [...degrees];
+                      newDegrees[i] = Number(selected) as Degree;
+                      setDegrees(newDegrees);
+                    }}
+                  >
+                    {degrees.map((_, i) => (
+                      <option value={i + 1}>{i + 1}</option>
+                    ))}
+                  </select>
                 </>
               );
             })}
